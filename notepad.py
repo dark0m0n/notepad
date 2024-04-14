@@ -1,4 +1,5 @@
-import sys, os
+import sys
+import os
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTextEdit, QFileDialog, QInputDialog, QMessageBox, QLineEdit
 from PyQt6.QtGui import QAction, QKeySequence, QTextCursor, QTextOption, QFont, QFontDatabase
@@ -12,23 +13,22 @@ class App(QApplication):
     def __init__(self, argv):
         super().__init__(argv)
 
-        self.window = Witgets()
+        self.window = Widgets()
         self.window.resize(900, 500)
         self.window.show()
         self.fname_adr = None
         self.last_search_text = ""
 
-        
-class Witgets(QMainWindow):
+
+class Widgets(QMainWindow):
     def __init__(self):
         super().__init__()
-        
+
         self.setWindowTitle('Untitled: Notepad')
         self.textEdit = QTextEdit()
         self.setCentralWidget(self.textEdit)
 
         menu = self.menuBar()
-
 
         # File menu
         file_menu = menu.addMenu('&File')
@@ -58,13 +58,12 @@ class Witgets(QMainWindow):
         file_menu.addAction(file_menu_save_as)
 
         file_menu.addSeparator()
-        
+
         # Exit button
         file_menu_exit = QAction('E&xit', self)
         file_menu_exit.setShortcut(QKeySequence.StandardKey.Quit)
         file_menu_exit.triggered.connect(self.close)
         file_menu.addAction(file_menu_exit)
-
 
         # Edit menu
         edit_menu = menu.addMenu('&Edit')
@@ -83,7 +82,7 @@ class Witgets(QMainWindow):
         edit_menu_cut.triggered.connect(self.cut)
         edit_menu.addAction(edit_menu_cut)
 
-        # Copy buttton
+        # Copy button
         edit_menu_copy = QAction('&Copy', self)
         edit_menu_copy.setShortcut(QKeySequence.StandardKey.Copy)
         edit_menu_copy.triggered.connect(self.copy)
@@ -141,7 +140,6 @@ class Witgets(QMainWindow):
         edit_menu_time_date.triggered.connect(self.time_date)
         edit_menu.addAction(edit_menu_time_date)
 
-
         # Format menu
         format_menu = menu.addMenu('&Format')
 
@@ -152,9 +150,8 @@ class Witgets(QMainWindow):
         format_menu.addAction(format_menu_word_wrap)
 
         format_menu_font = QAction('&Font...', self)
-        format_menu_font.triggered.connect(self.chosse_font)
+        format_menu_font.triggered.connect(self.choose_font)
         format_menu.addAction(format_menu_font)
-
 
         # View menu
         view_menu = menu.addMenu("&View")
@@ -174,12 +171,20 @@ class Witgets(QMainWindow):
         zoom_submenu_zoom_out.triggered.connect(self.zoom_out)
         zoom_submenu.addAction(zoom_submenu_zoom_out)
 
+    # File menu functions
 
-    #File menu functions
     def new_file(self):
+        """Create a new clean file
+        """
+
+        self.setWindowTitle('Untitled: Notepad')
+        self.fname_adr = None
         self.textEdit.clear()
 
     def open_file(self):
+        """Open file
+        """
+
         home_dir = str(Path.home())
         fname = QFileDialog.getOpenFileName(self, 'Open file', home_dir)
         self.fname_adr = fname[0]
@@ -188,17 +193,26 @@ class Witgets(QMainWindow):
             with open(fname[0], 'r', encoding='utf-8') as file:
                 data = file.read()
                 self.textEdit.setText(data)
-                self.setWindowTitle(str(os.path.basename(fname[0])) + ": Notepad")
+                self.setWindowTitle(
+                    str(os.path.basename(fname[0])) + ": Notepad")
 
     def save_file(self):
-        filepath = os.path.join(os.path.dirname(self.fname_adr), str(os.path.basename(self.fname_adr)))
-        
+        """Save data in current file
+        """
+
+        filepath = os.path.join(os.path.dirname(
+            self.fname_adr), str(os.path.basename(self.fname_adr)))
+
         with open(filepath, 'w') as file:
             file.write(self.textEdit.toPlainText())
-            
+
     def save_as_file(self):
+        """Create file and save data in this file
+        """
+
         home_dir = str(Path.home())
-        fname = QFileDialog.getSaveFileName(self, "Save file", home_dir, "Text files (*.txt)")
+        fname = QFileDialog.getSaveFileName(
+            self, "Save file", home_dir, "Text files (*.txt)")
 
         self.setWindowTitle(str(os.path.basename(fname[0])) + ": Notepad")
         self.fname_adr = fname[0]
@@ -207,57 +221,89 @@ class Witgets(QMainWindow):
             with open(fname[0], 'w') as file:
                 file.write(self.textEdit.toPlainText())
 
-
     # Edit menu functions
+
     def undo(self):
+        """Undo the text
+        """
+
         self.textEdit.document().undo()
 
     def cut(self):
+        """Cut the text
+        """
+
         self.textEdit.cut()
 
     def copy(self):
+        """Copy the text
+        """
+
         self.textEdit.copy()
 
     def paste(self):
+        """Paste copied text
+        """
+
         self.textEdit.paste()
 
     def delete(self):
+        """Delete character after cursor
+        """
+
         cursor = self.textEdit.textCursor()
         if cursor.hasSelection():
             cursor.deleteChar()
         else:
             cursor.deleteChar()
-            cursor.setPosition(cursor.position()-1, QTextCursor.MoveMode.MoveAnchor)
+            cursor.setPosition(cursor.position()-1,
+                               QTextCursor.MoveMode.MoveAnchor)
 
     def find_text(self):
-        search_text, ok = QInputDialog.getText(self, "Find Text", "Enter the text to find:")
+        """Find input text in the text
+        """
+
+        search_text, ok = QInputDialog.getText(
+            self, "Find Text", "Enter the text to find:")
         if ok and search_text:
             cursor = self.textEdit.document().find(search_text)
             if cursor.isNull():
-                QMessageBox.information(self, 'Notepad', f'"{search_text}" not found')
+                QMessageBox.information(
+                    self, 'Notepad', f'"{search_text}" not found')
             else:
                 self.textEdit.setTextCursor(cursor)
                 self.textEdit.setFocus()
                 self.last_search_text = search_text
-            
+
     def find_next(self):
-        cursor = self.textEdit.document().find(self.last_search_text, self.textEdit.textCursor().position())
+        """Show next found text
+        """
+
+        cursor = self.textEdit.document().find(
+            self.last_search_text, self.textEdit.textCursor().position())
         if cursor.isNull():
-            QMessageBox.information(self, 'Notepad', f'"{self.last_search_text}" not found')
+            QMessageBox.information(
+                self, 'Notepad', f'"{self.last_search_text}" not found')
         else:
             self.textEdit.setTextCursor(cursor)
             self.textEdit.setFocus()
 
     def replace(self):
-        text, ok = QInputDialog.getText(self, "Find and replace", "Enter text to find:", QLineEdit.EchoMode.Normal, "")
+        """Find text and replace it on input text
+        """
+
+        text, ok = QInputDialog.getText(
+            self, "Find and replace", "Enter text to find:", QLineEdit.EchoMode.Normal, "")
         if ok and text:
-            replace_text, ok = QInputDialog.getText(self, "Find and replace", "Enter text to replace:", QLineEdit.EchoMode.Normal, "")
+            replace_text, ok = QInputDialog.getText(
+                self, "Find and replace", "Enter text to replace:", QLineEdit.EchoMode.Normal, "")
             if ok and replace_text:
                 cursor = self.textEdit.textCursor()
                 cursor.movePosition(QTextCursor.MoveOperation.Start)
                 while cursor.hasSelection():
                     cursor.clearSelection()
-                    cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor)
+                    cursor.movePosition(
+                        QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor)
                 if cursor.movePosition(QTextCursor.MoveOperation.NextWord, QTextCursor.MoveMode.KeepAnchor):
                     if cursor.selectedText() == text:
                         cursor.insertText(replace_text)
@@ -266,43 +312,68 @@ class Witgets(QMainWindow):
                                 cursor.insertText(replace_text)
 
     def go_to(self):
-        num, ok = QInputDialog.getInt(self, 'Move to line', 'Number of lene:')
+        """Move cursor to entered line
+        """
+
+        num, ok = QInputDialog.getInt(self, 'Move to line', 'Number of line:')
         if ok and num:
             cursor = self.textEdit.textCursor()
             cursor.movePosition(QTextCursor.MoveOperation.Start)
-            cursor.movePosition(QTextCursor.MoveOperation.Down, QTextCursor.MoveMode.MoveAnchor, num-1)
+            cursor.movePosition(QTextCursor.MoveOperation.Down,
+                                QTextCursor.MoveMode.MoveAnchor, num-1)
             self.textEdit.setTextCursor(cursor)
 
     def select_all(self):
+        """Select all text
+        """
+
         self.textEdit.selectAll()
 
     def time_date(self):
+        """Write time and date
+        """
+
         now = datetime.now()
         today = date.today()
-        self.textEdit.append(f'{now.hour}:{now.minute} {today.strftime("%d.%m.%Y")}')
-
+        self.textEdit.append(
+            f'{now.hour}:{now.minute} {today.strftime("%d.%m.%Y")}')
 
     # Format menu functions
+
     def word_wrap(self, check):
+        """Turn on ot turn off word wrap
+        """
+
         if check == True:
             self.textEdit.setWordWrapMode(QTextOption.WrapMode.NoWrap)
         else:
             self.textEdit.setWordWrapMode(QTextOption.WrapMode.WordWrap)
 
-    def chosse_font(self):
+    def choose_font(self):
+        """Set font size
+        """
+
         num, ok = QInputDialog.getInt(self, 'Font Size', 'Font size:')
         if num and ok:
-            default_font = QFontDatabase.systemFont(QFontDatabase.SystemFont.GeneralFont)
+            default_font = QFontDatabase.systemFont(
+                QFontDatabase.SystemFont.GeneralFont)
             self.textEdit.setFont(QFont(default_font.family(), num))
 
-
     # View menu functions
+
     def zoom_in(self):
+        """Zoom in window
+        """
+
         self.textEdit.zoomIn()
 
     def zoom_out(self):
+        """Zoom out window
+        """
+
         self.textEdit.zoomOut()
 
 
-app = App(sys.argv)
-sys.exit(app.exec())
+if __name__ == "__main__":
+    app = App(sys.argv)
+    sys.exit(app.exec())
